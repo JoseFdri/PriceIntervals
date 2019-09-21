@@ -1,0 +1,27 @@
+version: '3.7'
+services:
+  nginx:
+    container_name: cb_nginx
+    build: ./nginx
+    ports:
+      - "4000:80"
+    volumes:
+      - .:/var/www/html/app
+    links:
+      - php
+  php:
+    container_name: cb_php
+    build: ./php
+    volumes:
+      - .:/var/www/html/app
+  mysql:
+    container_name: cb_mysql
+    image: mysql:5
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: demo
+    volumes:
+      - /cb/mysql-data:/var/lib/mysql
