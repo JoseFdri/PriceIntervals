@@ -88,7 +88,7 @@ app = new Vue({
                 }
             }).then(res => {
                 res.json().then(function(rsp) {
-                    if(rsp.status === 1) {
+                    if(rsp.status == 1) {
                         $('#priceIntervalModal').modal('hide');
                         app.showAlert('alert-success', rsp.message);
                         app.getAllPriceIntervals();

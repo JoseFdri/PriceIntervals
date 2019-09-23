@@ -9,6 +9,10 @@ class PriceIntervalsController {
     {
         try {
             $data = $request->getBody();
+            if(!self::validateDates(['date_start', 'date_end', 'price'])){
+                header("HTTP/1.1 400 Bad Request");
+                exit();
+            }
             $interval = new Interval($data['date_start'], $data['date_end'], $data['price']);
             $process = $interval->process();
             return [
@@ -33,6 +37,10 @@ class PriceIntervalsController {
     {
         try {
             $data = $request->getBody();
+            if(!self::validateDates(['date_start', 'date_end', 'price', 'id'])){
+                header("HTTP/1.1 400 Bad Request");
+                exit();
+            }
             $interval = new Interval($data['date_start'], $data['date_end'], $data['price'], $data['id']);
             $process = $interval->process();
             return [
@@ -53,7 +61,9 @@ class PriceIntervalsController {
         try {
             $priceInterval = PriceIntervals::where('id', $priceIntervalId)
                 ->first();
-            $priceInterval->delete();
+            if($priceInterval) {
+                $priceInterval->delete();
+            }
             return [
                 'status' => 1,
                 'message' => 'Price interval deleted successfully'
@@ -71,20 +81,8 @@ class PriceIntervalsController {
         return PriceIntervals::orderBy('date_start')->get();
     }
 
-    public static function get(int $priceIntervalId)
+    public static function reset()
     {
-        $priceIntervalId = PriceIntervals::where('id', $priceIntervalId)
-                    ->first();
-        if($priceIntervalId) {
-            return $priceIntervalId;
-        }
-        return [
-            'status' => 0,
-            'message' => 'Price Interval not found'
-        ];
-    }
-
-    public static function reset() {
         try {
             PriceIntervals::truncate();
             return [
@@ -97,6 +95,15 @@ class PriceIntervalsController {
                 'message' => $e->getMessage()
             ];
         }
+    }
+
+    private static function validateDates($requireFields){
+        foreach($requireFields as $requireField) {
+            if(!array_key_exists($requireField, $requireFields)){
+                return false;
+            }
+        }
+        return true;
     }
 }
 
