@@ -1,6 +1,7 @@
 <?php
 
 use Models\PriceIntervals;
+use Libs\Interval;
 
 class PriceIntervalsController {
 
@@ -8,15 +9,16 @@ class PriceIntervalsController {
     {
         try {
             $data = $request->getBody();
-            PriceIntervals::create($data);
+            $interval = new Interval($data['date_start'], $data['date_end'], $data['price']);
+            $process = $interval->process();
             return [
-                'status' => 1,
-                'message' => 'Price Interval added successfully'
+                'status' => $process->getStatus(),
+                'message' => $process->getMessage()
             ];
         } catch (Exception $e) {
             return [
                 'status' => 0,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage() . '| File: '.$e->getFile().'| line: '. $e->getLine()
             ];
         }
     }
@@ -31,15 +33,11 @@ class PriceIntervalsController {
     {
         try {
             $data = $request->getBody();
-            $priceInterval = PriceIntervals::where('id', $data['id'])
-                ->first();
-            $priceInterval->date_start = $data['date_start'];
-            $priceInterval->date_end = $data['date_end'];
-            $priceInterval->price = $data['price'];
-            $priceInterval->save();
+            $interval = new Interval($data['date_start'], $data['date_end'], $data['price'], $data['id']);
+            $process = $interval->process();
             return [
-                'status' => 1,
-                'message' => 'Price interval updated successfully'
+                'status' => $process->getStatus(),
+                'message' => $process->getMessage()
             ];
         } catch (Exception $e) {
             return [

@@ -50,9 +50,9 @@ app = new Vue({
         },
         sendNewInterval: function (){
             let data = {
-                date_start: app.modal.startDate,
-                date_end: app.modal.endDate,
-                price: app.modal.price
+                date_start: app.modal.startDate || moment().format('YYYY-MM-D'),
+                date_end: app.modal.endDate || moment().format('YYYY-MM-D'),
+                price: app.modal.price || 0
             };
             fetch('./priceInterval/insert', {
                 method: 'POST',
@@ -62,7 +62,7 @@ app = new Vue({
                 }
             }).then(res => {
                 res.json().then(function(rsp) {
-                    if(rsp.status === 1) {
+                    if(rsp.status == 1) {
                         $('#priceIntervalModal').modal('hide');
                         app.showAlert('alert-success', rsp.message);
                         app.getAllPriceIntervals();
@@ -77,7 +77,7 @@ app = new Vue({
             let data = {
                 date_start: app.modal.startDate,
                 date_end: app.modal.endDate,
-                price: app.modal.price,
+                price: app.modal.price || 0,
                 id: app.modal.id
             };
             fetch('./priceInterval/update', {
