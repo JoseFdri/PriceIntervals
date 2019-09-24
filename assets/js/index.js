@@ -50,8 +50,8 @@ app = new Vue({
         },
         sendNewInterval: function (){
             let data = {
-                date_start: app.modal.startDate || moment().format('YYYY-MM-D'),
-                date_end: app.modal.endDate || moment().format('YYYY-MM-D'),
+                date_start: app.modal.startDate,
+                date_end: app.modal.endDate ,
                 price: app.modal.price || 0
             };
             fetch('./priceInterval/insert', {

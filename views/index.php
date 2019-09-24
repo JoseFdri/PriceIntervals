@@ -85,15 +85,15 @@
                     <div class="modal-body">
                         <form>
                             <div class="form-group">
-                                <label for="exampleInputEmail1">Start date</label>
+                                <label>Start date</label>
                                 <input type="date" class="form-control" v-model="modal.startDate">
                             </div>
                             <div class="form-group">
-                                <label for="exampleInputEmail1">End date</label>
+                                <label>End date</label>
                                 <input type="date" class="form-control" v-model="modal.endDate">
                             </div>
                             <div class="form-group">
-                                <label for="exampleInputEmail1">Price</label>
+                                <label>Price</label>
                                 <input type="number" class="form-control" v-model="modal.price">
                             </div>
                         </form>
