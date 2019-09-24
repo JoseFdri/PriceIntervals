@@ -32,6 +32,7 @@ Payload format needs to be JSON, `date_start`, `date_end`, `price` and `id` fiel
 }
 ```
 3. To delete an Interval:
+```
 DELETE <domain>/priceInterval/delete/<interval_id>
-
+```
 Download postman collection for this API from [here](https://drive.google.com/open?id=1LekvLEQzefVazmEo86pa32p4Z54yhpSP)
