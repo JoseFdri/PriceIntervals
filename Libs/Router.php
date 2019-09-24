@@ -10,11 +10,26 @@ class Router
         'DELETE'
     );
 
+    /**
+     * Initialize Router class
+     *
+     * @param $request
+     *
+     * @return void;
+     */
     function __construct(IRequest $request)
     {
         $this->request = $request;
     }
 
+    /**
+     * Dynamically call undefined methods
+     *
+     * @param $name
+     * @param $args
+     *
+     * @return void;
+     */
     function __call($name, $args)
     {
         list($route, $controller) = $args;
@@ -25,7 +40,13 @@ class Router
         $this->{strtolower($name)}[$this->formatRoute($route)] = $controller;
     }
 
-
+    /**
+     * Format route
+     *
+     * @param $route
+     *
+     * @return string;
+     */
     private function formatRoute($route)
     {
         $result = rtrim($route, '/');
@@ -36,16 +57,34 @@ class Router
         return $result;
     }
 
+    /**
+     * When a invalid method is called this handle the response header
+     *
+     * @return void;
+     */
     private function invalidMethodHandler()
     {
         header("{$this->request->serverProtocol} 405 Method Not Allowed");
     }
 
+    /**
+     * When a invalid route is called this handle the response header
+     *
+     * @return void;
+     */
     private function defaultRequestHandler()
     {
         header("{$this->request->serverProtocol} 404 Not Found");
     }
 
+    /**
+     * Replace the numeric parameter from the route with $id
+     * to match the route config
+     *
+     * @param $requestUri
+     *
+     * @return void;
+     */
     private function translateUrl($requestUri)
     {
         $urlArray = explode('/', $requestUri);
@@ -61,6 +100,11 @@ class Router
         return implode('/', $parsedUrl);
     }
 
+    /**
+     * Initialize the controller and call the method requested
+     *
+     * @return void;
+     */
     function resolve()
     {
         $methodDictionary = $this->{strtolower($this->request->requestMethod)};
@@ -89,6 +133,14 @@ class Router
         }
     }
 
+    /**
+     * Get params from URL
+     *
+     * @param $route
+     * @param $requestUrl
+     *
+     * @return array;
+     */
     function getVariablesFromRoute($route, $requestUrl)
     {
         $segments = explode('/', $route);
@@ -104,6 +156,11 @@ class Router
         return $params;
     }
 
+    /**
+     * Resolve the request
+     *
+     * @return void;
+     */
     function __destruct()
     {
         $this->resolve();

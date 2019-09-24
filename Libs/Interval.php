@@ -12,6 +12,16 @@ class Interval {
     private $status = true;
     private $message = 'Successful';
 
+    /**
+     * Initialize this Class
+     *
+     * @param $startDate
+     * @param $endDate
+     * @param $price
+     * @param $id
+     *
+     * @return void;
+     */
     public function __construct($startDate, $endDate, $price, $id = null)
     {
         $this->startDate = $startDate;
@@ -19,6 +29,7 @@ class Interval {
         $this->price = $price;
         $this->id = $id;
     }
+
 
     private function setStatus($status) {
         $this->status = $status;
@@ -36,6 +47,11 @@ class Interval {
         return $this->message;
     }
 
+    /**
+     * Validate Interval properties
+     *
+     * @return bool;
+     */
     public function validateDates()
     {
         if(!$this->validateDate($this->startDate)) {
@@ -60,6 +76,12 @@ class Interval {
         }
         return true;
     }
+
+    /**
+     * Start procesing the new interval
+     *
+     * @return $this;
+     */
     public function process()
     {
         if(!$this->validateDates()){
@@ -72,7 +94,7 @@ class Interval {
         $parentInterval = $this->getParentInterval();
         if($parentInterval) {
             if($parentInterval->price != $this->price){
-                $this->splitParentInterval([$parentInterval]);
+                $this->splitParentInterval($parentInterval);
             }else {
                 $this->setStatus(false);
                 $this->setMessage('There is a Interval that already include this range of time');
@@ -83,18 +105,20 @@ class Interval {
             if($crossStartInterval || $crossEndInterval) {
                 $this->splitCrossInterval($crossStartInterval, $crossEndInterval);
             } else {
-                $newInterval = [
-                    'date_start' => $this->startDate,
-                    'date_end' => $this->endDate,
-                    'price' => $this->price
-                ];
-                $this->createInterval($newInterval);
+                $this->createInterval($this->startDate, $this->endDate, $this->price);
             }
         }
         $this->simplifyIntervals();
         return $this;
     }
 
+    /**
+     * Verify if a date is in the correct format
+     *
+     * @param $date
+     *
+     * @return string;
+     */
     function validateDate($date)
     {
         $format = 'Y-m-d';
@@ -102,6 +126,11 @@ class Interval {
         return $d && $d->format($format) === $date;
     }
 
+    /**
+     * Simplify intervals that are consecutive
+     *
+     * @return void;
+     */
     private function simplifyIntervals()
     {
         $intervals = PriceIntervals::orderBy('date_start')->get();
@@ -141,187 +170,167 @@ class Interval {
         }
     }
 
-    private function splitCrossInterval($crossStartInterval = null, $crossEndInterval  = null){
-        $newInterval = [
-            'date_start' => '',
-            'date_end' => '',
-            'price' => 0
-        ];
-        if($crossStartInterval && $crossEndInterval) {
-            if($crossStartInterval->date_end != $crossStartInterval->date_start
-                && $crossEndInterval->date_end != $crossEndInterval->date_start
-                && $crossStartInterval->date_end == $this->startDate
-                && $crossEndInterval->date_end == $this->endDate)
-            {
-                for ($i = 0; $i < 2; $i++){
-                    if($i == 0){
-                        $newInterval['date_start'] = $crossStartInterval->date_start;
-                        $newInterval['date_end'] = $this->modifyDate($this->startDate, 1, false);
-                        $newInterval['price'] = $crossStartInterval->price;
-                    } else if ($i == 1) {
-                        $newInterval['date_start'] = $this->startDate;
-                        $newInterval['date_end'] = $this->endDate;
-                        $newInterval['price'] = $this->price;
-                    }
-                    $this->createInterval($newInterval);
-                }
-                $this->deleteInterval($crossStartInterval->id);
-                $this->deleteInterval($crossEndInterval->id);
-            } else if($crossStartInterval->date_start == $this->startDate && $this->endDate == $crossEndInterval->date_start){
-                for ($i = 0; $i < 2; $i++){
-                    if($i == 0){
-                        $newInterval['date_start'] = $this->startDate;
-                        $newInterval['date_end'] = $this->endDate;
-                        $newInterval['price'] = $this->price;
-                    } else if ($i == 1) {
-                        $newInterval['date_start'] = $crossEndInterval->date_end;
-                        $newInterval['date_end'] = $this->modifyDate($this->endDate, 1);
-                        $newInterval['price'] = $crossEndInterval->price;
-                    }
-                    $this->createInterval($newInterval);
-                }
-                $this->deleteInterval($crossStartInterval->id);
-                $this->deleteInterval($crossEndInterval->id);
-            }else if ($this->startDate == $crossStartInterval->date_end && $this->endDate == $crossEndInterval->date_start) {
-                for ($i = 0; $i < 3; $i++){
-                    if($i == 0){
-                        $newInterval['date_start'] = $crossStartInterval->date_start;
-                        $newInterval['date_end'] = $this->modifyDate($this->startDate, 1, false);
-                        $newInterval['price'] = $crossStartInterval->price;
-                    } else if ($i == 1) {
-                        $newInterval['date_start'] = $this->startDate;
-                        $newInterval['date_end'] = $this->endDate;
-                        $newInterval['price'] = $this->price;
-                    }else if ($i == 2) {
-                        $newInterval['date_start'] =  $this->modifyDate($this->endDate, 1);
-                        $newInterval['date_end'] = $crossEndInterval->date_end;
-                        $newInterval['price'] = $crossEndInterval->price;
-                    }
-                    $this->createInterval($newInterval);
-                }
-                $this->deleteInterval($crossStartInterval->id);
-                $this->deleteInterval($crossEndInterval->id);
-            } else if ($this->startDate == $crossStartInterval->date_start && $this->endDate == $crossEndInterval->date_end) {
-                $newInterval['date_start'] =  $this->startDate;
-                $newInterval['date_end'] = $this->endDate;
-                $newInterval['price'] = $this->price;
-                $this->deleteInterval($crossStartInterval->id);
-                $this->deleteInterval($crossEndInterval->id);
-                $this->createInterval($newInterval);
-            }
-        } else {
-            if($crossStartInterval) {
-                for ($i = 0; $i < 2; $i++){
-                    if($i == 0){
-                        if($crossStartInterval->date_start == $crossStartInterval->date_end){
-                           continue;
-                        }
-                        $newInterval['date_start'] = $crossStartInterval->date_start;
-                        $newInterval['date_end'] = $this->modifyDate($this->startDate, 1, false);
-                        $newInterval['price'] = $crossStartInterval->price;
-                    } else if ($i == 1) {
-                        $newInterval['date_start'] = $this->startDate;
-                        $newInterval['date_end'] = $crossEndInterval ? $crossStartInterval->date_end : $this->endDate;
-                        $newInterval['price'] = $this->price;
-                    }
-                    $this->createInterval($newInterval);
-                }
-                $this->deleteInterval($crossStartInterval->id);
-            }
-            if($crossEndInterval) {
-                for ($i = 0; $i < 2; $i++){
-                    if($i == 0){
-                        $newInterval['date_start'] = $crossStartInterval ? $crossEndInterval->date_start : $this->startDate;
-                        $newInterval['date_end'] = $this->endDate;
-                        $newInterval['price'] = $this->price;
-                    } else if ($i == 1) {
-                        $newInterval['date_start'] = $this->modifyDate($this->endDate, 1);
-                        $newInterval['date_end'] = $crossEndInterval->date_end;
-                        $newInterval['price'] = $crossEndInterval->price;
-                    }
-                    $this->createInterval($newInterval);
-                }
-                $this->deleteInterval($crossEndInterval->id);
-            }
+    /**
+     * Split a interval that contains the start date of a new interval
+     *
+     * @param $startInterval
+     * @param $closeInterval
+     *
+     * @return void;
+     */
+    private function splitCrossStartInterval($startInterval, $closeInterval = false) {
+        $endDate = $closeInterval ? $this->endDate : $startInterval->date_end;
+        if($startInterval->date_start < $this->startDate && $startInterval->date_end > $this->startDate) {
+            $this->createInterval($startInterval->date_start, $this->modifyDate($this->startDate, 1, false), $startInterval->price);
+            $this->createInterval($this->startDate, $endDate, $this->price);
+        } else if ($startInterval->date_start < $this->startDate && $this->startDate == $startInterval->date_end) {
+            $this->createInterval($startInterval->date_start, $this->modifyDate($this->startDate, 1, false), $startInterval->price);
+            $this->createInterval($this->startDate, $endDate, $this->price);
+        } else if ($startInterval->date_start == $this->startDate && $startInterval->date_end > $this->startDate) {
+            $this->createInterval($this->startDate, $endDate, $this->price);
+        }else if ($startInterval->date_start == $startInterval->date_end) {
+            $this->createInterval($this->startDate, $endDate, $this->price);
+        }
+        $this->deleteInterval($startInterval->id);
+    }
+
+    /**
+     * Split a interval that contains the end date of a new interval
+     *
+     * @param $endInterval
+     * @param $closeInterval
+     *
+     * @return void;
+     */
+    private function splitCrossEndInterval($endInterval, $closeInterval = false)
+    {
+        $startDate = $closeInterval ? $this->startDate : $endInterval->date_start;
+        if($endInterval->date_start < $this->endDate && $this->endDate < $endInterval->date_end) {
+            $this->createInterval($startDate, $this->endDate, $this->price);
+            $this->createInterval($this->modifyDate($this->endDate, 1), $endInterval->date_end, $endInterval->price);
+        }else if ($endInterval->date_start < $this->endDate && $this->endDate == $endInterval->date_end) {
+            $this->createInterval($startDate, $this->endDate, $this->price);
+        }else if ($endInterval->date_start == $this->endDate && $this->endDate < $endInterval->date_end) {
+            $this->createInterval($startDate, $this->endDate, $this->price);
+            $this->createInterval($this->modifyDate($this->endDate, 1), $endInterval->date_end, $endInterval->price);
+        }else if ($endInterval->date_start == $endInterval->date_end) {
+            $this->createInterval($startDate, $this->endDate, $this->price);
+        }
+        $this->deleteInterval($endInterval->id);
+    }
+
+    /**
+     * Create a middle interval in order to fill a space between intervals when is required
+     *
+     * @param $startInterval
+     * @param $endInterval
+     *
+     * @return void;
+     */
+    private function createMiddleInterval($startInterval, $endInterval)
+    {
+        $consecutive = $this->modifyDate($startInterval->date_end, 1);
+        if($consecutive != $endInterval->date_start){
+            $this->createInterval($consecutive, $this->modifyDate($endInterval->date_start, 1, false), $this->price);
         }
     }
 
+    /**
+     * Start splitting intervals that contains the start date or end date of a new interval
+     *
+     * @param $startInterval
+     * @param $endInterval
+     *
+     * @return void;
+     */
+    private function splitCrossInterval($startInterval = null, $endInterval  = null){
+        if ($startInterval && !$endInterval) {
+            $this->splitCrossStartInterval($startInterval, true);
+        }else if($endInterval && !$startInterval) {
+            $this->splitCrossEndInterval($endInterval, true);
+        }else if ($endInterval && $startInterval) {
+            $this->splitCrossStartInterval($startInterval);
+            $this->createMiddleInterval($startInterval, $endInterval);
+            $this->splitCrossEndInterval($endInterval);
+        }
+    }
+
+    /**
+     * Add or rest days to a specific date
+     *
+     * @param $date
+     * @param $days
+     * @param $add
+     *
+     * @return string;
+     */
     private function modifyDate($date, $days, $add = true)
     {
-        $operation = ' + ';
-        if(!$add) {
-            $operation = ' - ';
-        }
+        $operation = $add ? ' + ' : ' - ';
         return  date('Y-m-d', strtotime($date.$operation.$days.' days'));
     }
 
-    private function splitParentInterval($intervals){
-        $newInterval = [
-            'date_start' => '',
-            'date_end' => '',
-            'price' => 0
-        ];
-        if(count($intervals) == 1){
-            $parentInterval = $intervals[0];
-            if($parentInterval->date_start != $this->startDate && $parentInterval->date_end != $this->endDate){
-                for ($i = 0; $i < 3; $i++){
-                    if($i == 0){
-                        $newInterval['date_start'] = $parentInterval->date_start;
-                        $newInterval['date_end'] = $this->modifyDate($this->startDate, 1, false);
-                        $newInterval['price'] = $parentInterval->price;
-                    }else if ($i == 1) {
-                        $newInterval['date_start'] = $this->startDate;
-                        $newInterval['date_end'] = $this->endDate;
-                        $newInterval['price'] = $this->price;
-                    }else if ($i == 2) {
-                        $newInterval['date_start'] = $this->modifyDate($this->endDate, 1);
-                        $newInterval['date_end'] = $parentInterval->date_end;
-                        $newInterval['price'] = $parentInterval->price;
-                    }
-                    $this->createInterval($newInterval);
-                }
-            }else if ($parentInterval->date_start == $this->startDate && $parentInterval->date_end != $this->endDate) {
-                for ($i = 0; $i < 2; $i++){
-                    if($i == 0){
-                        $newInterval['date_start'] = $this->startDate;
-                        $newInterval['date_end'] = $this->endDate;
-                        $newInterval['price'] = $this->price;
-                    }else if ($i == 1) {
-                        $newInterval['date_start'] = $this->modifyDate($this->endDate, 1);
-                        $newInterval['date_end'] = $parentInterval->date_end;
-                        $newInterval['price'] = $parentInterval->price;
-                    }
-                    $this->createInterval($newInterval);
-                }
-            }else if ($parentInterval->date_end == $this->endDate && $parentInterval->date_start != $this->startDate) {
-                for ($i = 0; $i < 2; $i++){
-                    if($i == 0){
-                        $newInterval['date_start'] = $parentInterval->date_start;
-                        $newInterval['date_end'] = $this->modifyDate($this->startDate, 1, false);
-                        $newInterval['price'] = $parentInterval->price;
-                    }else if ($i == 1) {
-                        $newInterval['date_start'] = $this->startDate;
-                        $newInterval['date_end'] = $parentInterval->date_end;
-                        $newInterval['price'] = $this->price;
-                    }
-                   $this->createInterval($newInterval);
-                }
-            }else if ($parentInterval->date_end == $this->endDate && $parentInterval->date_start == $this->startDate) {
-                $this->createInterval($newInterval);
-            }
-            $this->deleteInterval($parentInterval->id);
+    /**
+     * If a new interval is contain in another interval, this split the parent interval
+     *
+     * @param $parent
+     *
+     * @return void;
+     */
+    private function splitParentInterval($parent)
+    {
+        if($parent->date_start < $this->startDate && $this->endDate < $parent->date_end) {
+            $this->createInterval($parent->date_start, $this->modifyDate($this->startDate, 1, false), $parent->price);
+            $this->createInterval($this->startDate, $this->endDate, $this->price);
+            $this->createInterval($this->modifyDate($this->endDate, 1), $parent->date_end, $parent->price);
+        } else if ($parent->date_start == $this->startDate && $this->endDate < $parent->date_end) {
+            $this->createInterval($this->startDate, $this->endDate, $this->price);
+            $this->createInterval($this->modifyDate($this->endDate, 1), $parent->date_end, $parent->price);
+        }else if ($parent->date_start == $parent->date_end) {
+            $this->createInterval($this->startDate, $this->endDate, $parent->price);
+        }else if ($parent->date_start < $this->startDate && $parent->date_end == $this->endDate) {
+            $this->createInterval($parent->date_start, $this->modifyDate($this->startDate, 1, false), $parent->price);
+            $this->createInterval($this->startDate, $this->endDate, $this->price);
         }
+        $this->deleteInterval($parent->id);
     }
 
-    private function createInterval($data)
+    /**
+     * Insert a new interval in the price_intervals table
+     *
+     * @param $startDate
+     * @parm $endDate
+     * @price $price
+     *
+     * @return void;
+     */
+    private function createInterval($startDate, $endDate, $price)
     {
+        $data = [
+            'date_start' => $startDate,
+            'date_end' => $endDate,
+            'price' => $price
+        ];
         PriceIntervals::create($data);
     }
 
+    /**
+     * Delete a specific interval from price_intervals table
+     *
+     * @param $id
+     *
+     * @return void;
+     */
     private function deleteInterval($id)
     {
         PriceIntervals::where('id', $id)->first()->delete();
     }
+
+    /**
+     * Get the a interval that contains a new interval
+     *
+     * @return object;
+     */
     private function getParentInterval()
     {
         return DB::table('price_intervals')
@@ -331,6 +340,11 @@ class Interval {
                     ->first();
     }
 
+    /**
+     * Delete all intervals that are in the range of a new interval
+     *
+     * @return int
+     */
     private function deleteMiddleInterval() {
         return DB::table('price_intervals')
             ->selectRaw('*')
@@ -339,6 +353,11 @@ class Interval {
             ->delete();
     }
 
+    /**
+     * Get the interval that contains the start date of a new interval
+     *
+     * @return object
+     */
     private function getCrossStartDateInterval()
     {
         return DB::table('price_intervals')
@@ -348,6 +367,11 @@ class Interval {
             ->first();
     }
 
+    /**
+     * Get the interval that contains the end date of a new interval
+     *
+     * @return object
+     */
     private function getCrossEndDateInterval()
     {
         return DB::table('price_intervals')

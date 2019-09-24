@@ -5,11 +5,18 @@ use Libs\Interval;
 
 class PriceIntervalsController {
 
+    /**
+     * Create a new interval
+     *
+     * @param $request
+     *
+     * @return array;
+     */
     public static function insert($request)
     {
         try {
             $data = $request->getBody();
-            if(!self::validateDates(['date_start', 'date_end', 'price'])){
+            if(!self::validateDates(['date_start', 'date_end', 'price'], $data)){
                 header("HTTP/1.1 400 Bad Request");
                 exit();
             }
@@ -27,17 +34,29 @@ class PriceIntervalsController {
         }
     }
 
+    /**
+     * Return the homepage
+     *
+     * @return string;
+     */
     public static function index()
     {
         $html = file_get_contents('views/index.php');
         return $html;
     }
 
+    /**
+     * Update an interval
+     *
+     * @param $request
+     *
+     * @return array;
+     */
     public static function update($request)
     {
         try {
             $data = $request->getBody();
-            if(!self::validateDates(['date_start', 'date_end', 'price', 'id'])){
+            if(!self::validateDates(['date_start', 'date_end', 'price', 'id'], $data)){
                 header("HTTP/1.1 400 Bad Request");
                 exit();
             }
@@ -56,6 +75,13 @@ class PriceIntervalsController {
 
     }
 
+    /**
+     * Delete a specific interval
+     *
+     * @param $priceIntervalId
+     *
+     * @return array;
+     */
     public static function delete(int $priceIntervalId)
     {
         try {
@@ -76,11 +102,22 @@ class PriceIntervalsController {
         }
     }
 
+    /**
+     * Get all the intervals
+     *
+     *
+     * @return array;
+     */
     public static function all()
     {
         return PriceIntervals::orderBy('date_start')->get();
     }
 
+    /**
+     * Truncate the price_intervals table in order to start from the scratch
+     *
+     * @return array;
+     */
     public static function reset()
     {
         try {
@@ -97,9 +134,17 @@ class PriceIntervalsController {
         }
     }
 
-    private static function validateDates($requireFields){
+    /**
+     * Verify that require fields are present on the request
+     *
+     * @param $requireFields
+     * @param $data
+     *
+     * @return bool;
+     */
+    private static function validateDates($requireFields, $data){
         foreach($requireFields as $requireField) {
-            if(!array_key_exists($requireField, $requireFields)){
+            if(!array_key_exists($requireField, $data)){
                 return false;
             }
         }

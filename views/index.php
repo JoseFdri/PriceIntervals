@@ -11,7 +11,7 @@
 </head>
 <body>
     <div class="container" id="app">
-            <div class="alert mt-3" :class="alert.type" role="alert" id="alert" style="opactiy: 0">
+        <div class="alert mt-3" :class="alert.type" role="alert" id="alert" style="opactiy: 0; z-index: 999999; position:relative">
             {{alert.message}}
         </div>
         <div class="row mt-5 mb-3">
@@ -75,7 +75,7 @@
             </div>
         </div>
         <div class="modal fade" tabindex="-1" role="dialog" id="priceIntervalModal">
-            <div class="modal-dialog" role="document">
+            <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">{{modal.title}}</h5>

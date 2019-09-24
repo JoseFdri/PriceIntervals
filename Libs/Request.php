@@ -3,11 +3,22 @@ include_once 'IRequest.php';
 
 class Request implements IRequest
 {
+    /**
+     * Initialize Request class
+     *
+     *
+     * @return void;
+     */
     function __construct()
     {
         $this->bootstrapSelf();
     }
 
+    /**
+     * Register the server properties
+     *
+     * @return void;
+     */
     private function bootstrapSelf()
     {
         foreach($_SERVER as $key => $value)
@@ -16,6 +27,13 @@ class Request implements IRequest
         }
     }
 
+    /**
+     * Convert string to camel case
+     *
+     * @param $string
+     *
+     * @return string;
+     */
     private function toCamelCase($string)
     {
         $result = strtolower($string);
@@ -29,6 +47,9 @@ class Request implements IRequest
         return $result;
     }
 
+    /**
+     * {inherit doc}
+     */
     public function getBody()
     {
         if (in_array($this->requestMethod, ['POST', 'PUT']))
