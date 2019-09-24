@@ -60,12 +60,19 @@ class PriceIntervalsController {
                 header("HTTP/1.1 400 Bad Request");
                 exit();
             }
-            $interval = new Interval($data['date_start'], $data['date_end'], $data['price'], $data['id']);
-            $process = $interval->process();
-            return [
-                'status' => $process->getStatus(),
-                'message' => $process->getMessage()
-            ];
+            $priceInterval = PriceIntervals::where('id', $data['id'])
+                ->first();
+            if($priceInterval) {
+                $interval = new Interval($data['date_start'], $data['date_end'], $data['price'], $data['id']);
+                $process = $interval->process();
+                return [
+                    'status' => $process->getStatus(),
+                    'message' => $process->getMessage()
+                ];
+            } else {
+                header("HTTP/1.1 400 Bad Request");
+                exit();
+            }
         } catch (Exception $e) {
             return [
                 'status' => 0,
