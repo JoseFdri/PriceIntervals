@@ -108,7 +108,7 @@ class Interval {
                 $this->createInterval($this->startDate, $this->endDate, $this->price);
             }
         }
-        $this->simplifyIntervals();
+        $this->mergeIntervals();
         return $this;
     }
 
@@ -127,11 +127,11 @@ class Interval {
     }
 
     /**
-     * Simplify intervals that are consecutive
+     * merge intervals that are consecutive
      *
      * @return void;
      */
-    private function simplifyIntervals()
+    private function mergeIntervals()
     {
         $intervals = PriceIntervals::orderBy('date_start')->get();
         $newIntervals = [];
@@ -271,7 +271,7 @@ class Interval {
     }
 
     /**
-     * If a new interval is contain in another interval, this split the parent interval
+     * If a new interval is contained in another interval, this split the parent interval
      *
      * @param $parent
      *
